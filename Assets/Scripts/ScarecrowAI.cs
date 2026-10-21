@@ -3,6 +3,7 @@ using UnityEngine.AI;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
+
 [RequireComponent(typeof(NavMeshAgent))]
 public class ScarecrowAI : MonoBehaviour
 {
@@ -15,20 +16,17 @@ public class ScarecrowAI : MonoBehaviour
 
     [Header("Behavior")]
     [SerializeField] float chaseSpeed = 4.5f;
-    [Tooltip("How close the player must be before this scarecrow starts hunting.")]
-    [SerializeField] float activationRange = 30f;
+    [SerializeField] float activationRange = 20f;
+    [SerializeField] float hearingRange = 6f;
+    [SerializeField] float giveUpTime = 6f;
     [SerializeField] float catchDistance = 1.3f;
-    [Tooltip("Past this distance the fog hides it, so the player can't 'see' it.")]
     [SerializeField] float maxSightDistance = 25f;
-    [Tooltip("Layers that block line of sight (walls). Leave as Everything to start.")]
     [SerializeField] LayerMask sightBlockers = ~0;
 
-    [Header("Audio (optional)")]
-    [Tooltip("Looping creak/scrape that plays only while it moves.")]
+    [Header("Audio")]
     [SerializeField] AudioSource moveLoop;
 
     [Header("Events")]
-    [Tooltip("Hook up your lose screen here later. If empty, the scene restarts.")]
     public UnityEvent onPlayerCaught;
 
     public State CurrentState { get; private set; } = State.Idle;
@@ -36,6 +34,10 @@ public class ScarecrowAI : MonoBehaviour
     NavMeshAgent agent;
     readonly Plane[] frustum = new Plane[6];
     readonly Vector3[] sightPoints = new Vector3[3];
+
+    bool aware;               
+    float lastSensedTime;     
+    Vector3 lastKnownPos;     
 
     void Awake()
     {
@@ -62,19 +64,47 @@ public class ScarecrowAI : MonoBehaviour
 
         float dist = FlatDistance(transform.position, player.position);
 
+        bool sensed = dist <= hearingRange || (dist <= activationRange && CanSeePlayer());
+        if (sensed)
+        {
+            aware = true;
+            lastSensedTime = Time.time;
+            lastKnownPos = player.position;
+        }
+        else if (aware && Time.time - lastSensedTime > giveUpTime)
+        {
+            aware = false;
+        }
+
         State next;
-        if (IsSeenByPlayer())             next = State.Frozen;
-        else if (dist <= activationRange) next = State.Chasing;
-        else                              next = State.Idle;
+        if (IsSeenByPlayer()) next = State.Frozen;
+        else if (aware)       next = State.Chasing;
+        else                  next = State.Idle;
 
         SetState(next);
 
         if (CurrentState == State.Chasing)
         {
-            agent.SetDestination(player.position);
+            agent.SetDestination(sensed ? player.position : lastKnownPos);
             if (dist <= catchDistance) CatchPlayer();
         }
     }
+
+
+    bool CanSeePlayer()
+    {
+        Vector3 eye = transform.position + Vector3.up * 1f;
+        Vector3 target = playerCamera.transform.position;
+        Vector3 toPlayer = target - eye;
+        float d = toPlayer.magnitude;
+
+        if (!Physics.Raycast(eye, toPlayer / d, out RaycastHit hit, d, sightBlockers, QueryTriggerInteraction.Ignore))
+            return true;  
+
+        return hit.transform == player || hit.transform.IsChildOf(player);
+    }
+
+    // ---------- sight check --------------------
 
     bool IsSeenByPlayer()
     {
@@ -82,9 +112,11 @@ public class ScarecrowAI : MonoBehaviour
             ? bodyRenderer.bounds
             : new Bounds(transform.position + Vector3.up, new Vector3(1f, 2f, 1f));
 
+         
         GeometryUtility.CalculateFrustumPlanes(playerCamera, frustum);
         if (!GeometryUtility.TestPlanesAABB(frustum, b)) return false;
 
+         
         Vector3 eye = playerCamera.transform.position;
         float h = b.extents.y * 0.8f;
         sightPoints[0] = b.center + Vector3.up * h;
@@ -98,15 +130,15 @@ public class ScarecrowAI : MonoBehaviour
             if (d > maxSightDistance) continue;
 
             if (!Physics.Raycast(eye, toPoint / d, out RaycastHit hit, d, sightBlockers, QueryTriggerInteraction.Ignore))
-                return true; 
+                return true;  
 
             if (hit.transform == transform || hit.transform.IsChildOf(transform))
-                return true;
+                return true;  
         }
         return false;
     }
 
-    // states
+    // ---------- state changes ----------
 
     void SetState(State next)
     {
@@ -115,7 +147,7 @@ public class ScarecrowAI : MonoBehaviour
 
         bool moving = next == State.Chasing;
         agent.isStopped = !moving;
-        if (!moving) agent.velocity = Vector3.zero;
+        if (!moving) agent.velocity = Vector3.zero;  
 
         if (moveLoop)
         {
@@ -131,8 +163,10 @@ public class ScarecrowAI : MonoBehaviour
         agent.velocity = Vector3.zero;
         if (moveLoop) moveLoop.Stop();
 
-        if (onPlayerCaught.GetPersistentEventCount() > 0)
-            onPlayerCaught.Invoke();
+        onPlayerCaught.Invoke();
+
+        if (GameManager.Instance)
+            GameManager.Instance.Lose();
         else
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
@@ -147,6 +181,8 @@ public class ScarecrowAI : MonoBehaviour
     {
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, activationRange);
+        Gizmos.color = new Color(1f, 0.5f, 0f);
+        Gizmos.DrawWireSphere(transform.position, hearingRange);
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, catchDistance);
     }
