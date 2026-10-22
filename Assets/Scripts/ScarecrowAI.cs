@@ -9,12 +9,12 @@ public class ScarecrowAI : MonoBehaviour
 {
     public enum State { Idle, Chasing, Frozen, Caught }
 
-    [Header("References")]
+    [Header("references")]
     [SerializeField] Transform player;
     [SerializeField] Camera playerCamera;
     [SerializeField] Renderer bodyRenderer;
 
-    [Header("Behavior")]
+    [Header("behavior")]
     [SerializeField] float chaseSpeed = 4.5f;
     [SerializeField] float activationRange = 20f;
     [SerializeField] float hearingRange = 6f;
@@ -23,10 +23,10 @@ public class ScarecrowAI : MonoBehaviour
     [SerializeField] float maxSightDistance = 25f;
     [SerializeField] LayerMask sightBlockers = ~0;
 
-    [Header("Audio")]
+    [Header("audio")]
     [SerializeField] AudioSource moveLoop;
 
-    [Header("Events")]
+    [Header("events")]
     public UnityEvent onPlayerCaught;
 
     public State CurrentState { get; private set; } = State.Idle;

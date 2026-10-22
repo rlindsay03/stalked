@@ -9,28 +9,26 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    [Header("Rules")]
+    [Header("rules")]
     [SerializeField] int lanternsRequired = 5;
 
-    [Header("UI")]
-    [Tooltip("Top-corner counter, e.g. 'Lanterns 2 / 5'.")]
+    [Header("ui")]
     [SerializeField] TMP_Text lanternCounter;
-    [Tooltip("Center-screen message that fades out, e.g. 'The gate is open'.")]
     [SerializeField] TMP_Text messageText;
     [SerializeField] GameObject winPanel;
     [SerializeField] GameObject losePanel;
 
-    [Header("World")]
+    [Header("world")]
     [SerializeField] ExitGate exitGate;
-    [Tooltip("Drag the PlayerCapsule's First Person Controller here so the player stops moving when the game ends.")]
     [SerializeField] MonoBehaviour[] disableOnGameOver;
 
-    [Header("Audio (optional)")]
+    [Header("audio")]
     [SerializeField] AudioSource sfxSource;
     [SerializeField] AudioClip collectClip;
     [SerializeField] AudioClip gateOpenClip;
     [SerializeField] AudioClip winClip;
-    [SerializeField] AudioClip loseClip;
+    [SerializeField] AudioClip[] loseClips;
+    [SerializeField] bool layerLoseClips = true;
 
     int collected;
     bool gameOver;
@@ -50,7 +48,7 @@ public class GameManager : MonoBehaviour
         if (losePanel) losePanel.SetActive(false);
         if (messageText) messageText.text = "";
         UpdateCounter();
-        ShowMessage("Find the 5 lanterns.\nDon't look away.");
+        ShowMessage("Find the 5 lanterns.\nDon't. look. away.");
     }
 
     void Update()
@@ -81,7 +79,13 @@ public class GameManager : MonoBehaviour
     }
 
     public void Win()  => EndGame(winPanel, winClip);
-    public void Lose() => EndGame(losePanel, loseClip);
+    public void Lose()
+    {
+        if (layerLoseClips || loseClips.Length == 0)
+            EndGame(losePanel, loseClips);
+        else
+            EndGame(losePanel, loseClips[Random.Range(0, loseClips.Length)]);
+    }
 
     public void Restart()
     {
@@ -90,7 +94,7 @@ public class GameManager : MonoBehaviour
     }
 
 
-    void EndGame(GameObject panel, AudioClip clip)
+    void EndGame(GameObject panel, params AudioClip[] clips)
     {
         if (gameOver) return;
         gameOver = true;
@@ -99,7 +103,7 @@ public class GameManager : MonoBehaviour
             if (b) b.enabled = false;
 
         if (panel) panel.SetActive(true);
-        Play(clip);
+        foreach (AudioClip clip in clips) Play(clip);
 
         Time.timeScale = 0f;              
         Cursor.lockState = CursorLockMode.None;

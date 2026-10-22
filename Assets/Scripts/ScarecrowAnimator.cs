@@ -3,14 +3,9 @@ using UnityEngine;
 [RequireComponent(typeof(ScarecrowAI))]
 public class ScarecrowAnimator : MonoBehaviour
 {
-    [Tooltip("The model's Animator. Found automatically on children if empty.")]
     [SerializeField] Animator animator;
-    [Tooltip("Bool parameter in the Animator Controller that switches Idle <-> Walk.")]
     [SerializeField] string movingParameter = "Moving";
-    [Tooltip("Stop-motion frame rate. 12 looks hand-animated. Set to 0 for smooth animation.")]
     [SerializeField] float stopMotionFps = 12f;
-
-    [Tooltip("On: snaps back into the Idle pose (T-pose) the instant it's seen. Off: freezes mid-stride.")]
     [SerializeField] bool snapToIdleWhenSeen = true;
 
     ScarecrowAI ai;
@@ -25,7 +20,7 @@ public class ScarecrowAnimator : MonoBehaviour
         if (!animator) animator = GetComponentInChildren<Animator>();
         if (!animator)
         {
-            Debug.LogWarning($"{name}: no Animator found on the model.", this);
+            Debug.LogWarning($"{name}: no animator found on the model.", this);
             enabled = false;
             return;
         }
@@ -36,7 +31,7 @@ public class ScarecrowAnimator : MonoBehaviour
                 hasMovingParam = true;
 
         if (!hasMovingParam)
-            Debug.LogWarning($"{name}: Animator has no bool parameter called '{movingParameter}'.", this);
+            Debug.LogWarning($"{name}: animator has no bool parameter called '{movingParameter}'.", this);
 
         animator.applyRootMotion = false; 
         animator.enabled = false;         
