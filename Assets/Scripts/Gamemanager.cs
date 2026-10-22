@@ -35,6 +35,7 @@ public class GameManager : MonoBehaviour
     Coroutine messageRoutine;
 
     public bool AllCollected => collected >= lanternsRequired;
+    public bool IsGameOver => gameOver;
 
     void Awake()
     {
