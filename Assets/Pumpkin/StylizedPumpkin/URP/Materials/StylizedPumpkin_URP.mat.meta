@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 6de47420143eca2418d1a4c57e5368f3
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 267441
+  packageName: Stylized Pumpkin
+  packageVersion: 1.0
+  assetPath: Assets/ItsPaulTodd/StylizedPumpkin/URP/Materials/StylizedPumpkin_URP.mat
+  uploadId: 618828

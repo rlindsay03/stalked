@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 4f5d2385a810cbe4eb441b541c4d3bd3
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: stylizedpumpkin
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 267441
+  packageName: Stylized Pumpkin
+  packageVersion: 1.0
+  assetPath: Assets/ItsPaulTodd/StylizedPumpkin/BuiltIn/Materials/StylizedPumpkin_BuiltIn.mat
+  uploadId: 618828
